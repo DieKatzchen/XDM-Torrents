@@ -49,60 +49,60 @@ def isValidItem(terms,  title):
 #        'additionalProperties': False
 #    }
 
-    class KAT(Indexer):
-        version = "0.001"
-        identifier = "en.diekatzchen.kat"
-        
-        types = ['de.lad1337.torrent']
-        
-        def _baseUrlRss(self, search):
-            return "https://kat.cr/usearch/{}/".format(search)
-        
-        def searchForElement(self, element):
-            payload = { 'rss' : 1 }
-            downloads = []
-            terms = element.getSearchTerms()
-            for term in terms:
-                url = _baseUrlRss(term)
-                try:
-                    r = requests.get(url, params=payload, raise_status=False)
-                except RequestException as e:
-                    log.warning('Search resulted in: {}'.format(e))
-                    continue
-                if not r.content:
-                    log.debug('No content returned from search.')
-                    continue
-                elif r.status_code != 200:
-                    log.warning('Search returned {} response code'.format(r.status_code))
-                    continue
-                rss = feedparser.parse(r.content)
-                
-                ex = rss.get('bozo_exception', False)
-                if ex:
-                    log.warning('Got bozo_exception (bad feed)')
-                    continue
-                for item in rss.entries:
-                    title = item.title
-                    if not item.get('enclosures'):
-                        log.warning('Could not get url for entry from KAT. Maybe plugin needs updated?')
-                        continue
-                    if isValidItem(element.getName(), title):
-                        url = item.enclosures[0]['url']
-                        
-                        d = Download()
-                        d.url = url
-                        d.name = title
-                        d.element = element
-                        d.size = item.torrent_contentLength
-                        d.external_id = getTorrentExternalId(url)
-                        d.type = 'de.lad1337.torrent'
-                        downloads.append(d)
-                        
-            if len(downloads) == 0:
-                log.info("No search results for {}.".format(terms))
-                    
-            return downloads
-            
+class KAT(Indexer):
+	version = "0.001"
+	identifier = "en.diekatzchen.kat"
+	
+	types = ['de.lad1337.torrent']
+	
+	def _baseUrlRss(self, search):
+		return "https://kat.cr/usearch/{}/".format(search)
+	
+	def searchForElement(self, element):
+		payload = { 'rss' : 1 }
+		downloads = []
+		terms = element.getSearchTerms()
+		for term in terms:
+			url = _baseUrlRss(term)
+			try:
+				r = requests.get(url, params=payload, raise_status=False)
+			except RequestException as e:
+				log.warning('Search resulted in: {}'.format(e))
+				continue
+			if not r.content:
+				log.debug('No content returned from search.')
+				continue
+			elif r.status_code != 200:
+				log.warning('Search returned {} response code'.format(r.status_code))
+				continue
+			rss = feedparser.parse(r.content)
+			
+			ex = rss.get('bozo_exception', False)
+			if ex:
+				log.warning('Got bozo_exception (bad feed)')
+				continue
+			for item in rss.entries:
+				title = item.title
+				if not item.get('enclosures'):
+					log.warning('Could not get url for entry from KAT. Maybe plugin needs updated?')
+					continue
+				if isValidItem(element.getName(), title):
+					url = item.enclosures[0]['url']
+					
+					d = Download()
+					d.url = url
+					d.name = title
+					d.element = element
+					d.size = item.torrent_contentLength
+					d.external_id = getTorrentExternalId(url)
+					d.type = 'de.lad1337.torrent'
+					downloads.append(d)
+					
+		if len(downloads) == 0:
+			log.info("No search results for {}.".format(terms))
+				
+		return downloads
+		
 def getConfigHtml(self):
     return """<script>
         function newsznab_""" + self.instance + """_spreadCategories(data){console.log(data);

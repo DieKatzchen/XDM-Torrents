@@ -1,5 +1,22 @@
 {
     "name": "Diekatzchen Torrent repo", 
     "info_url": "https://github.com/DieKatzchen/XDM-Torrents/", 
-    "plugins": {}
+    "plugins": {
+        "en.diekatzchen.kat": [
+            {
+                "major_version": 0, 
+                "minor_version": 1, 
+                "name": "KAT", 
+                "type": "Indexer", 
+                "format": "zip", 
+                "desc": null, 
+                "xdm_version": [
+                    0, 
+                    5, 
+                    19
+                ], 
+                "download_url": "https://github.com/DieKatzchen/XDM-Torrents/archive/master.zip"
+            }
+        ]
+    }
 }
