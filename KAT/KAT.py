@@ -21,6 +21,7 @@
 
 from xdm.plugins import *
 import urllib
+import logging
 from xdm import helper
 from xml.dom.minidom import parseString
 from xml.dom.minidom import Node
@@ -28,42 +29,42 @@ import unicodedata
 import re
 from requests import RequestException
 
-log = logging.getLogger('kat)
+log = logging.getLogger('kat')
 
 def isValidItem(terms,  title):
     for term in terms.split('+'):
         if not (term in title):
             return False
     return True
-	
-	
+    
+    
 
-class SearchKAT(object):
-    schema = {
-        'type': 'object',
-        'properties': {
-            'category': {'type': 'string', 'enum': ['all', 'movies', 'tv', 'music', 'books', 'xxx', 'other']},
-            'verified': {'type': 'boolean'}
-        },
-        'additionalProperties': False
-    }
+#class SearchKAT(object):
+#    schema = {
+#        'type': 'object',
+#        'properties': {
+#            'category': {'type': 'string', 'enum': ['all', 'movies', 'tv', 'music', 'books', 'xxx', 'other']},
+#            'verified': {'type': 'boolean'}
+#        },
+#        'additionalProperties': False
+#    }
 
     class KAT(Indexer):
-	    version = "0.001"
-		identifier = "en.diekatzchen.kat"
-		
-		types = ['de.lad1337.torrent']
-		
-		def _baseUrlRss(self, search):
+        version = "0.001"
+        identifier = "en.diekatzchen.kat"
+        
+        types = ['de.lad1337.torrent']
+        
+        def _baseUrlRss(self, search):
             return "https://kat.cr/usearch/{}/".format(search)
-		
-		def searchForElement(self, element):
-		    payload = { 'rss' : 1 }
-		    downloads = []
-		    terms = element.getSearchTerms()
-		    for term in terms:
-			    url = _baseUrlRss(term)
-				try:
+        
+        def searchForElement(self, element):
+            payload = { 'rss' : 1 }
+            downloads = []
+            terms = element.getSearchTerms()
+            for term in terms:
+                url = _baseUrlRss(term)
+                try:
                     r = requests.get(url, params=payload, raise_status=False)
                 except RequestException as e:
                     log.warning('Search resulted in: {}'.format(e))
@@ -75,33 +76,33 @@ class SearchKAT(object):
                     log.warning('Search returned {} response code'.format(r.status_code))
                     continue
                 rss = feedparser.parse(r.content)
-			    
-				ex = rss.get('bozo_exception', False)
+                
+                ex = rss.get('bozo_exception', False)
                 if ex:
                     log.warning('Got bozo_exception (bad feed)')
                     continue
-				for item in rss.entries:
-				    title = item.title
-					if not item.get('enclosures'):
+                for item in rss.entries:
+                    title = item.title
+                    if not item.get('enclosures'):
                         log.warning('Could not get url for entry from KAT. Maybe plugin needs updated?')
                         continue
-					if isValidItem(element.getName(), title):
-					    url = item.enclosures[0]['url']
-					    
-					    d = Download()
-						d.url = url
-						d.name = title
+                    if isValidItem(element.getName(), title):
+                        url = item.enclosures[0]['url']
+                        
+                        d = Download()
+                        d.url = url
+                        d.name = title
                         d.element = element
                         d.size = item.torrent_contentLength
                         d.external_id = getTorrentExternalId(url)
                         d.type = 'de.lad1337.torrent'
                         downloads.append(d)
-						
-			if len(downloads) == 0:
-                log.info("No search results for %s." % terms)
+                        
+            if len(downloads) == 0:
+                log.info("No search results for {}.".format(terms))
                     
             return downloads
-			
+            
 def getConfigHtml(self):
     return """<script>
         function newsznab_""" + self.instance + """_spreadCategories(data){console.log(data);
@@ -111,5 +112,5 @@ def getConfigHtml(self):
         };
         </script>
     """
-	
+    
 config_meta = {'plugin_desc': 'Quick and dirty KAT indexer'}
